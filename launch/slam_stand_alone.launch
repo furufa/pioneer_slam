@@ -1,0 +1,45 @@
+<launch>
+  <!--  <node pkg="pioneer_slam" name="keyboard_cmd_vel" type="keyboard_cmd_vel.py" required="true" />  ロボット動かすやつ -->
+  <!--  <node pkg="pioneer_slam" name="motors" type="motors.py" required="ture" /> オドメトリ情報publishするやつ -->
+
+  <!-- 上記のやつの代わりに RosAria Node -->
+    <node pkg="rosaria" type="RosAria" name="RosAria"/>
+
+  <!-- joy node-->
+    <node respawn="true" pkg="joy" type="joy_node" name="pioneer_joy" >
+      <param name="dev" type="string" value="/dev/input/js1" />
+    </node>
+
+  <!-- Axes -->
+    <param name="axis_linear" value="1" type="int" />
+    <param name="axis_angular" value="0" type="int" />
+    <param name="scale_linear" value="2" type="double" />
+    <param name="scale_angular" value="2" type="double" />
+    <node pkg="gamepad_operation" type="pioneer_teleop_joy" name="teleop" />
+
+  <!-- 上記すべてgamepad_operationから引用 -->
+
+    <node pkg="urg_node" name="urg_node" type="urg_node" required="true" >
+      <param name="frame_id" value="base_link" /> <!-- urg_nodeに対して、urg_nodeのフレームがbase_linkであることを設定 -->
+    </node>
+  <!-- ロボットの座標とLRFの座標がずれている場合、さらなる設定が必要 -->
+
+    <arg name="scan_topic" default="/scan" /> <!-- 以下２行はlaunchファイル使い回す引数を設定するためのもの -->
+    <arg name="odom_topic" default="/odom" />
+
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+      <param name="base_frame" value="base_link" /> <!-- 以下２行で利用するフレームを設定 -->
+      <param name="odom_frame" value="odom" />
+
+      <param name="maxUrange" value="4.0" /> <!-- URGのレーザの範囲を設定する maxUrangeはスキャンデータにこれより大きな値があるときに打ち切る閾値 -->
+      <param name="maxRange" value="4.0" /> <!-- maxRangeはスキャンデータで得られた値について、この値いないの場合、信用してその間に障害物が何もないとみなす値 -->
+
+      <param name="srr" value="0.3" /> <!-- 直進１mあたりの直進方向の誤差[m] -->
+      <param name="srt" value="0.1" /> <!-- 回転１radあたりの直進方向の誤差[m] -->
+      <param name="str" value="0.1" /> <!-- 直進１mあたりの回転方向の誤差[rad] -->
+      <param name="stt" value="0.3" /> <!-- 回転１radあたりの回転方向の誤差[rad] -->
+
+      <param name="particles" value="100" />
+    </node>
+</launch>
+
